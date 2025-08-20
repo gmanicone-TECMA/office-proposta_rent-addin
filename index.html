@@ -7,25 +7,35 @@
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
   <style>
     body {
-      font-family: sans-serif; margin: 10px;
+      font-family: sans-serif;
+      margin: 10px;
     }
     #paramContainer {
-      display: none; margin-top: 10px;
+      display: none;
+      margin-top: 10px;
     }
     table {
-      width: 100%; border-collapse: collapse; font-size: 14px;
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
     }
     th, td {
-      border: 1px solid #ccc; padding: 6px;
+      border: 1px solid #ccc;
+      padding: 6px;
     }
     tr:hover {
-      background-color: #eef; cursor: pointer;
+      background-color: #eef;
+      cursor: pointer;
     }
     input {
-      width: 100%; padding: 5px; font-size: 14px;
+      width: 100%;
+      padding: 5px;
+      font-size: 14px;
     }
     #status {
-      margin-top: 10px; color: red; font-weight: bold;
+      margin-top: 10px;
+      font-size: 13px;
+      color: #c00;
     }
   </style>
 </head>
@@ -51,6 +61,10 @@
   <script>
     const csvURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT1KJ7kIyv2Px87iRXLs8meNHI-bdVvWu9gcMLgHoQnSorvjkRM7lqSsj2lgl2nU0Ge1BFEogX1Yi1j/pub?output=csv";
     let parametri = [];
+
+    function setStatus(msg) {
+      document.getElementById("status").textContent = msg;
+    }
 
     async function loadCSVParams() {
       try {
@@ -96,7 +110,9 @@
     function setupSearch() {
       const input = document.getElementById("searchInput");
       const container = document.getElementById("paramContainer");
-      input.addEventListener("focus", () => container.style.display = "block");
+      input.addEventListener("focus", () => {
+        container.style.display = "block";
+      });
       input.addEventListener("input", () => {
         const query = input.value.toLowerCase();
         const filtered = parametri.filter(p =>
@@ -109,24 +125,20 @@
     }
 
     function insertParam(param) {
-      if (!Office.context.requirements.isSetSupported("WordApi", 1.1)) {
-        setStatus("⚠️ Le API di Word non sono supportate in questo ambiente.");
-        return;
+      try {
+        Word.run(async (context) => {
+          const range = context.document.getSelection();
+          range.insertText(param, Word.InsertLocation.replace);
+          await context.sync();
+          setStatus("✅ Parametro inserito.");
+        }).catch(error => {
+          console.error("Errore Word.run:", error);
+          setStatus("❌ Errore durante l'inserimento. Verifica di aver selezionato un punto nel documento.");
+        });
+      } catch (e) {
+        console.error("Errore globale insertParam:", e);
+        setStatus("❌ Errore generale durante l'inserimento.");
       }
-
-      Word.run(async (context) => {
-        const range = context.document.getSelection();
-        range.insertText(param, Word.InsertLocation.replace);
-        await context.sync();
-      }).catch(error => {
-        console.error("Errore durante inserimento:", error);
-        setStatus("❌ Errore durante l'inserimento.");
-      });
-    }
-
-    function setStatus(message) {
-      const statusDiv = document.getElementById("status");
-      statusDiv.textContent = message;
     }
 
     Office.onReady(() => {
@@ -134,6 +146,7 @@
         parametri = await loadCSVParams();
         renderTable(parametri);
         setupSearch();
+        setStatus("🔎 Ricerca pronta. Seleziona un parametro.");
       })();
     });
   </script>
