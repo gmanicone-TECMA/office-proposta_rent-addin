@@ -4,25 +4,33 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>MyHome RENT Proposal Compiler Assistant</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
   <style>
-    body { font-family: sans-serif; margin: 10px; background: #fff; }
-    #paramContainer { display: none; margin-top: 10px; transition: all 0.2s ease; }
+    body {
+      font-family: sans-serif; margin: 10px;
+    }
+    #paramContainer {
+      display: none; margin-top: 10px;
+    }
     table {
       width: 100%; border-collapse: collapse; font-size: 14px;
     }
     th, td {
-      border: 1px solid #ddd; padding: 6px;
+      border: 1px solid #ccc; padding: 6px;
     }
     tr:hover {
-      background-color: #e0f0ff; cursor: pointer;
+      background-color: #eef; cursor: pointer;
     }
     input {
       width: 100%; padding: 5px; font-size: 14px;
     }
+    #status {
+      margin-top: 10px; color: red; font-weight: bold;
+    }
   </style>
-  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
 </head>
 <body>
+
   <h3>Clicca per cercare un parametro...</h3>
   <input type="text" id="searchInput" placeholder="Cerca..." />
   <div id="paramContainer">
@@ -38,91 +46,97 @@
     </table>
   </div>
 
-<script>
-const csvURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT1KJ7kIyv2Px87iRXLs8meNHI-bdVvWu9gcMLgHoQnSorvjkRM7lqSsj2lgl2nU0Ge1BFEogX1Yi1j/pub?output=csv";
+  <div id="status"></div>
 
-let parametri = [];
+  <script>
+    const csvURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT1KJ7kIyv2Px87iRXLs8meNHI-bdVvWu9gcMLgHoQnSorvjkRM7lqSsj2lgl2nU0Ge1BFEogX1Yi1j/pub?output=csv";
+    let parametri = [];
 
-async function loadCSVParams() {
-  try {
-    const response = await fetch(csvURL);
-    const text = await response.text();
-    const lines = text.split('\n').filter(line => line.trim() !== '');
-    const params = lines.slice(1)
-      .map(line => line.split(','))
-      .filter(values => values.length >= 3 && values[0] && values[1] && values[2])
-      .map(values => ({
-        valore: values[0].trim(),
-        categoria: values[1].trim(),
-        descrizione: values[2].trim()
-      }));
-    return params;
-  } catch (e) {
-    console.error("Errore nel caricamento CSV:", e);
-    alert("❌ Errore nel caricamento dei parametri.");
-    return [];
-  }
-}
+    async function loadCSVParams() {
+      try {
+        const response = await fetch(csvURL);
+        const text = await response.text();
+        const lines = text.split('\n').filter(line => line.trim() !== '');
+        const params = lines.slice(1)
+          .map(line => line.split(','))
+          .filter(values => values.length >= 3)
+          .map(values => ({
+            valore: values[0].trim(),
+            categoria: values[1].trim(),
+            descrizione: values[2].trim()
+          }));
+        return params;
+      } catch (e) {
+        console.error("Errore nel caricamento CSV:", e);
+        setStatus("❌ Errore nel caricamento dei parametri.");
+        return [];
+      }
+    }
 
-function renderTable(data) {
-  const tbody = document.querySelector("#paramTable tbody");
-  tbody.innerHTML = "";
-  if (data.length === 0) {
-    const row = document.createElement("tr");
-    const cell = document.createElement("td");
-    cell.colSpan = 3;
-    cell.textContent = "Nessun parametro trovato.";
-    row.appendChild(cell);
-    tbody.appendChild(row);
-    return;
-  }
-  data.forEach(p => {
-    const row = document.createElement("tr");
-    row.style.cursor = "pointer";
-    row.addEventListener("click", () => insertParam(p.valore));
-    const col1 = document.createElement("td"); col1.textContent = p.valore;
-    const col2 = document.createElement("td"); col2.textContent = p.categoria;
-    const col3 = document.createElement("td"); col3.textContent = p.descrizione;
-    row.appendChild(col1);
-    row.appendChild(col2);
-    row.appendChild(col3);
-    tbody.appendChild(row);
-  });
-}
+    function renderTable(data) {
+      const tbody = document.querySelector("#paramTable tbody");
+      tbody.innerHTML = "";
+      if (data.length === 0) {
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+        cell.colSpan = 3;
+        cell.textContent = "Nessun parametro trovato.";
+        row.appendChild(cell);
+        tbody.appendChild(row);
+        return;
+      }
+      data.forEach(p => {
+        const row = document.createElement("tr");
+        row.addEventListener("click", () => insertParam(p.valore));
+        row.innerHTML = `<td>${p.valore}</td><td>${p.categoria}</td><td>${p.descrizione}</td>`;
+        tbody.appendChild(row);
+      });
+    }
 
-function setupSearch() {
-  const input = document.getElementById("searchInput");
-  const container = document.getElementById("paramContainer");
-  input.addEventListener("focus", () => {
-    container.style.display = "block";
-  });
-  input.addEventListener("input", () => {
-    const query = input.value.toLowerCase();
-    const filtered = parametri.filter(p =>
-      p.valore.toLowerCase().includes(query) ||
-      p.categoria.toLowerCase().includes(query) ||
-      p.descrizione.toLowerCase().includes(query)
-    );
-    renderTable(filtered);
-  });
-}
+    function setupSearch() {
+      const input = document.getElementById("searchInput");
+      const container = document.getElementById("paramContainer");
+      input.addEventListener("focus", () => container.style.display = "block");
+      input.addEventListener("input", () => {
+        const query = input.value.toLowerCase();
+        const filtered = parametri.filter(p =>
+          p.valore.toLowerCase().includes(query) ||
+          p.categoria.toLowerCase().includes(query) ||
+          p.descrizione.toLowerCase().includes(query)
+        );
+        renderTable(filtered);
+      });
+    }
 
-function insertParam(param) {
-  Word.run(async (context) => {
-    const range = context.document.getSelection();
-    range.insertText(param, Word.InsertLocation.replace);
-    await context.sync();
-  }).catch(error => {
-    console.error("Errore:", error);
-    alert("Errore durante l'inserimento.");
-  });
-}
+    function insertParam(param) {
+      if (!Office.context.requirements.isSetSupported("WordApi", 1.1)) {
+        setStatus("⚠️ Le API di Word non sono supportate in questo ambiente.");
+        return;
+      }
 
-(async function init() {
-  parametri = await loadCSVParams();
-  renderTable(parametri);
-  setupSearch();
-})();
-</script>
+      Word.run(async (context) => {
+        const range = context.document.getSelection();
+        range.insertText(param, Word.InsertLocation.replace);
+        await context.sync();
+      }).catch(error => {
+        console.error("Errore durante inserimento:", error);
+        setStatus("❌ Errore durante l'inserimento.");
+      });
+    }
+
+    function setStatus(message) {
+      const statusDiv = document.getElementById("status");
+      statusDiv.textContent = message;
+    }
+
+    Office.onReady(() => {
+      (async function init() {
+        parametri = await loadCSVParams();
+        renderTable(parametri);
+        setupSearch();
+      })();
+    });
+  </script>
+
 </body>
 </html>
