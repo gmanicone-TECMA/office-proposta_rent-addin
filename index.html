@@ -62,8 +62,10 @@
     const csvURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT1KJ7kIyv2Px87iRXLs8meNHI-bdVvWu9gcMLgHoQnSorvjkRM7lqSsj2lgl2nU0Ge1BFEogX1Yi1j/pub?output=csv";
     let parametri = [];
 
-    function setStatus(msg) {
-      document.getElementById("status").textContent = msg;
+    function setStatus(msg, isError = false) {
+      const status = document.getElementById("status");
+      status.style.color = isError ? "#c00" : "#090";
+      status.textContent = msg;
     }
 
     async function loadCSVParams() {
@@ -82,7 +84,7 @@
         return params;
       } catch (e) {
         console.error("Errore nel caricamento CSV:", e);
-        setStatus("❌ Errore nel caricamento dei parametri.");
+        setStatus("❌ Errore nel caricamento dei parametri.", true);
         return [];
       }
     }
@@ -124,32 +126,29 @@
       });
     }
 
-    function insertParam(param) {
+    async function insertParam(param) {
       try {
-        Word.run(async (context) => {
+        await Word.run(async (context) => {
           const range = context.document.getSelection();
           range.insertText(param, Word.InsertLocation.replace);
           await context.sync();
           setStatus("✅ Parametro inserito.");
-        }).catch(error => {
-          console.error("Errore Word.run:", error);
-          setStatus("❌ Errore durante l'inserimento. Verifica di aver selezionato un punto nel documento.");
         });
-      } catch (e) {
-        console.error("Errore globale insertParam:", e);
-        setStatus("❌ Errore generale durante l'inserimento.");
+      } catch (error) {
+        console.error("Errore durante l'inserimento:", error);
+        setStatus("❌ Errore durante l'inserimento. Seleziona un punto nel documento.", true);
       }
     }
 
     Office.onReady(() => {
-      (async function init() {
-        parametri = await loadCSVParams();
-        renderTable(parametri);
-        setupSearch();
-        setStatus("🔎 Ricerca pronta. Seleziona un parametro.");
-      })();
+      loadCSVParams()
+        .then(data => {
+          parametri = data;
+          renderTable(parametri);
+          setupSearch();
+          setStatus("🔎 Ricerca pronta. Seleziona un parametro.");
+        });
     });
   </script>
-
 </body>
 </html>
