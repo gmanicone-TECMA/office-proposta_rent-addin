@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Parametri Inserimento</title>
+  <title>MyHome RENT Proposal Compiler Assistant</title>
   <style>
-    body { font-family: sans-serif; margin: 10px; }
-    #paramContainer { display: none; margin-top: 10px; }
+    body { font-family: sans-serif; margin: 10px; background: #fff; }
+    #paramContainer { display: none; margin-top: 10px; transition: all 0.2s ease; }
     table {
       width: 100%; border-collapse: collapse; font-size: 14px;
     }
@@ -23,7 +23,7 @@
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
 </head>
 <body>
-  <h3>Inserisci parametro</h3>
+  <h3>Clicca per cercare un parametro...</h3>
   <input type="text" id="searchInput" placeholder="Cerca..." />
   <div id="paramContainer">
     <table id="paramTable">
@@ -39,7 +39,7 @@
   </div>
 
 <script>
-const csvURL = "https://docs.google.com/spreadsheets/d/e/YOUR_SHEET_ID/pub?output=csv";
+const csvURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT1KJ7kIyv2Px87iRXLs8meNHI-bdVvWu9gcMLgHoQnSorvjkRM7lqSsj2lgl2nU0Ge1BFEogX1Yi1j/pub?output=csv";
 
 let parametri = [];
 
